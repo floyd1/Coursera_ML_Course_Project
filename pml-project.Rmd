@@ -1,0 +1,83 @@
+---
+title: "Human Activity Recognition ML Project"
+author: "Vladimir Goldin"
+date: "August 22, 2015"
+output: 
+  html_document: 
+    keep_md: yes
+---
+
+### Background
+
+Six young healthy participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).  
+Read more: <http://groupware.les.inf.puc-rio.br/har#ixzz3jcYf6pTX>
+
+In this project, we will attempt to use the HAR dataset to correctly classify the fashion in which the Unilateral Dumbbell Biceps Curl exercise was performed.
+
+### Load the data
+
+```{r}
+library(caret)
+
+pml_full <- read.csv("pml-training.csv")
+```
+
+### Feature Extraction
+
+`str(pml_full)` reveals that many features have `NA` or `#DIV/0!` values. Furthermore, some features are irrelevant for the prediction model (such as features `X`, `user_name`, etc.). And upon closer inspection, many others are derived from the collected instrument data, such as `avg`, `stddev`, etc. 
+
+So, to complete the feature extraction, we will keep only the primary instrument data, with the following derivative data removed: `avg`, `min`, `max`, `var`, `stddev`, `amplitude`, `kurtosis`, `skewness`
+
+```{r}
+pml <- pml_full[,-c(1:7, grep("amplitude|min|max|avg|var|stddev|skewness|kurtosis", names(pml_full), ignore.case = TRUE))]
+
+cols <- ncol(pml)
+```
+
+As a result, of the `r ncol(pml_full)` columns in the original dataset, we are left with `r cols` columns that we'll be using to build our prediction model.
+
+### Partitioning the Data
+
+We will partition the original dataset into training and testing sets, 75% and 25%, respectively.
+
+```{r}
+set.seed(40505)
+inTrain <- createDataPartition(y = pml$classe, p = .75, list = FALSE)
+training <- pml[inTrain,]
+testing <- pml[-inTrain,]
+```
+
+### Building a k-Nearest Neighbor Model with Cross-Validation
+
+We've attempted to fit the data using the Partial Least Squares model, which yielded an accuracy rate of only 38%. With such a dismal result, we've decided to abandon the linear regression route altogether.
+
+Instead, since we are dealing with a classification problem, the kNN Model seemed like a sensible choice.
+
+```{r}
+knnFit <- train(training[,1:(cols-1)], training[,cols],
+                 method = "knn",
+                 preProcess = c("center", "scale"),
+                 tuneLength = 10,
+                 trControl = trainControl(method = "cv"))
+
+summary(knnFit)
+```
+
+For k = `r knnFit$results$k[1]`, the accuracy was `r round(knnFit$results$Accuracy[1],3)*100`%.
+
+### Cross-Validation Plot
+
+```{r}
+plot(knnFit)
+```
+
+The plot clearly shows that for k > 5, the model results in progressively worsening accuracy. This makes sense since our dataset consists of only 5 classes: {`r unique(pml[,cols])`}
+
+### Predicting on the `testing` set
+
+```{r}
+test_knnFit <- predict(knnFit, newdata = testing[,1:(cols-1)])
+(conMat <- confusionMatrix(test_knnFit, testing[,cols]))
+```
+
+The Confusion Matrix shows an accuracy of `r round(conMat$overall[[1]],3)*100`% on the `testing` dataset. And the error rate is `r round(1 - conMat$overall[[1]],3)*100`%.
