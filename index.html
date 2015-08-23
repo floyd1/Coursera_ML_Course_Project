@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Human Activity Recognition ML Project : ">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Human Activity Recognition ML Project</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/floyd1/Coursera_ML_Course_Project">View on GitHub</a>
+
+          <h1 id="project_title">Human Activity Recognition ML Project</h1>
+          <h2 id="project_tagline"></h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/floyd1/Coursera_ML_Course_Project/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/floyd1/Coursera_ML_Course_Project/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="human-activity-recognition-ml-project" class="anchor" href="#human-activity-recognition-ml-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>Human Activity Recognition ML Project</h1>
+
+<p>Vladimir Goldin<br>
+August 22, 2015  </p>
+
+<h3>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h3>
+
+<p>Six young healthy participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).<br>
+Read more: <a href="http://groupware.les.inf.puc-rio.br/har#ixzz3jcYf6pTX">http://groupware.les.inf.puc-rio.br/har#ixzz3jcYf6pTX</a></p>
+
+<p>In this project, we will attempt to use the HAR dataset to correctly classify the fashion in which the Unilateral Dumbbell Biceps Curl exercise was performed.</p>
+
+<h3>
+<a id="load-the-data" class="anchor" href="#load-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Load the data</h3>
+
+<div class="highlight highlight-r"><pre>library(<span class="pl-smi">caret</span>)</pre></div>
+
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2
+</code></pre>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">pml_full</span> <span class="pl-k">&lt;-</span> read.csv(<span class="pl-s"><span class="pl-pds">"</span>pml-training.csv<span class="pl-pds">"</span></span>)</pre></div>
+
+<h3>
+<a id="feature-extraction" class="anchor" href="#feature-extraction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Feature Extraction</h3>
+
+<p><code>str(pml_full)</code> reveals that many features have <code>NA</code> or <code>#DIV/0!</code> values. Furthermore, some features are irrelevant for the prediction model (such as features <code>X</code>, <code>user_name</code>, etc.). And upon closer inspection, many others are derived from the collected instrument data, such as <code>avg</code>, <code>stddev</code>, etc. </p>
+
+<p>So, to complete the feature extraction, we will keep only the primary instrument data, with the following derivative data removed: <code>avg</code>, <code>min</code>, <code>max</code>, <code>var</code>, <code>stddev</code>, <code>amplitude</code>, <code>kurtosis</code>, <code>skewness</code></p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">pml</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">pml_full</span>[,<span class="pl-k">-</span>c(<span class="pl-c1">1</span><span class="pl-k">:</span><span class="pl-c1">7</span>, grep(<span class="pl-s"><span class="pl-pds">"</span>amplitude|min|max|avg|var|stddev|skewness|kurtosis<span class="pl-pds">"</span></span>, names(<span class="pl-smi">pml_full</span>), <span class="pl-v">ignore.case</span> <span class="pl-k">=</span> <span class="pl-c1">TRUE</span>))]
+
+<span class="pl-smi">cols</span> <span class="pl-k">&lt;-</span> ncol(<span class="pl-smi">pml</span>)</pre></div>
+
+<p>As a result, of the 160 columns in the original dataset, we are left with 53 columns that we'll be using to build our prediction model.</p>
+
+<h3>
+<a id="partitioning-the-data" class="anchor" href="#partitioning-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Partitioning the Data</h3>
+
+<p>We will partition the original dataset into training and testing sets, 75% and 25%, respectively.</p>
+
+<div class="highlight highlight-r"><pre>set.seed(<span class="pl-c1">40505</span>)
+<span class="pl-smi">inTrain</span> <span class="pl-k">&lt;-</span> createDataPartition(<span class="pl-v">y</span> <span class="pl-k">=</span> <span class="pl-smi">pml</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span> .<span class="pl-c1">75</span>, <span class="pl-v">list</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
+<span class="pl-smi">training</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">pml</span>[<span class="pl-smi">inTrain</span>,]
+<span class="pl-smi">testing</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">pml</span>[<span class="pl-k">-</span><span class="pl-smi">inTrain</span>,]</pre></div>
+
+<h3>
+<a id="building-a-k-nearest-neighbor-model-with-cross-validation" class="anchor" href="#building-a-k-nearest-neighbor-model-with-cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building a k-Nearest Neighbor Model with Cross-Validation</h3>
+
+<p>We've attempted to fit the data using the Partial Least Squares model, which yielded an accuracy rate of only 38%. With such a dismal result, we've decided to abandon the linear regression route altogether.</p>
+
+<p>Instead, since we are dealing with a classification problem, the kNN Model seemed like a sensible choice.</p>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">knnFit</span> <span class="pl-k">&lt;-</span> train(<span class="pl-smi">training</span>[,<span class="pl-c1">1</span><span class="pl-k">:</span>(<span class="pl-smi">cols</span><span class="pl-k">-</span><span class="pl-c1">1</span>)], <span class="pl-smi">training</span>[,<span class="pl-smi">cols</span>],
+                 <span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>knn<span class="pl-pds">"</span></span>,
+                 <span class="pl-v">preProcess</span> <span class="pl-k">=</span> c(<span class="pl-s"><span class="pl-pds">"</span>center<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>scale<span class="pl-pds">"</span></span>),
+                 <span class="pl-v">tuneLength</span> <span class="pl-k">=</span> <span class="pl-c1">10</span>,
+                 <span class="pl-v">trControl</span> <span class="pl-k">=</span> trainControl(<span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>cv<span class="pl-pds">"</span></span>))
+
+summary(<span class="pl-smi">knnFit</span>)</pre></div>
+
+<pre><code>##             Length Class      Mode     
+## learn        2     -none-     list     
+## k            1     -none-     numeric  
+## theDots      0     -none-     list     
+## xNames      52     -none-     character
+## problemType  1     -none-     character
+## tuneValue    1     data.frame list     
+## obsLevels    5     -none-     character
+</code></pre>
+
+<p>For k = 5, the accuracy was 96.7%.</p>
+
+<h3>
+<a id="cross-validation-plot" class="anchor" href="#cross-validation-plot" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross-Validation Plot</h3>
+
+<div class="highlight highlight-r"><pre>plot(<span class="pl-smi">knnFit</span>)</pre></div>
+
+<p><img src="pml-project_files/figure-html/unnamed-chunk-5-1.png" alt=""> </p>
+
+<p>The plot clearly shows that for k &gt; 5, the model results in progressively worsening accuracy. This makes sense since our dataset consists of only 5 classes: {A, B, C, D, E}</p>
+
+<h3>
+<a id="predicting-on-the-testing-set" class="anchor" href="#predicting-on-the-testing-set" aria-hidden="true"><span class="octicon octicon-link"></span></a>Predicting on the <code>testing</code> set</h3>
+
+<div class="highlight highlight-r"><pre><span class="pl-smi">test_knnFit</span> <span class="pl-k">&lt;-</span> predict(<span class="pl-smi">knnFit</span>, <span class="pl-v">newdata</span> <span class="pl-k">=</span> <span class="pl-smi">testing</span>[,<span class="pl-c1">1</span><span class="pl-k">:</span>(<span class="pl-smi">cols</span><span class="pl-k">-</span><span class="pl-c1">1</span>)])
+(<span class="pl-smi">conMat</span> <span class="pl-k">&lt;-</span> confusionMatrix(<span class="pl-smi">test_knnFit</span>, <span class="pl-smi">testing</span>[,<span class="pl-smi">cols</span>]))</pre></div>
+
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1379   13    1    2    0
+##          B    6  917   12    0    9
+##          C    2   13  828   33    4
+##          D    4    3   11  763    3
+##          E    4    3    3    6  885
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.9731          
+##                  95% CI : (0.9682, 0.9774)
+##     No Information Rate : 0.2845          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.966           
+##  Mcnemar's Test P-Value : 0.004074        
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9885   0.9663   0.9684   0.9490   0.9822
+## Specificity            0.9954   0.9932   0.9872   0.9949   0.9960
+## Pos Pred Value         0.9885   0.9714   0.9409   0.9732   0.9822
+## Neg Pred Value         0.9954   0.9919   0.9933   0.9900   0.9960
+## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
+## Detection Rate         0.2812   0.1870   0.1688   0.1556   0.1805
+## Detection Prevalence   0.2845   0.1925   0.1794   0.1599   0.1837
+## Balanced Accuracy      0.9920   0.9797   0.9778   0.9719   0.9891
+</code></pre>
+
+<p>The Confusion Matrix shows an accuracy of 97.3% on the <code>testing</code> dataset. And the error rate is 2.7%.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Human Activity Recognition ML Project maintained by <a href="https://github.com/floyd1">floyd1</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
