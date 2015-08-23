@@ -41,7 +41,7 @@ As a result, of the `r ncol(pml_full)` columns in the original dataset, we are l
 We will partition the original dataset into training and testing sets, 75% and 25%, respectively.
 
 ```{r}
-set.seed(40505)
+set.seed(10505)
 inTrain <- createDataPartition(y = pml$classe, p = .75, list = FALSE)
 training <- pml[inTrain,]
 testing <- pml[-inTrain,]
@@ -60,7 +60,7 @@ knnFit <- train(training[,1:(cols-1)], training[,cols],
                  tuneLength = 10,
                  trControl = trainControl(method = "cv"))
 
-summary(knnFit)
+knnFit
 ```
 
 For k = `r knnFit$results$k[1]`, the accuracy was `r round(knnFit$results$Accuracy[1],3)*100`%.
