@@ -62,7 +62,7 @@ Read more: <a href="http://groupware.les.inf.puc-rio.br/har#ixzz3jcYf6pTX">http:
 
 <p>We will partition the original dataset into training and testing sets, 75% and 25%, respectively.</p>
 
-<div class="highlight highlight-r"><pre>set.seed(<span class="pl-c1">40505</span>)
+<div class="highlight highlight-r"><pre>set.seed(<span class="pl-c1">10505</span>)
 <span class="pl-smi">inTrain</span> <span class="pl-k">&lt;-</span> createDataPartition(<span class="pl-v">y</span> <span class="pl-k">=</span> <span class="pl-smi">pml</span><span class="pl-k">$</span><span class="pl-smi">classe</span>, <span class="pl-v">p</span> <span class="pl-k">=</span> .<span class="pl-c1">75</span>, <span class="pl-v">list</span> <span class="pl-k">=</span> <span class="pl-c1">FALSE</span>)
 <span class="pl-smi">training</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">pml</span>[<span class="pl-smi">inTrain</span>,]
 <span class="pl-smi">testing</span> <span class="pl-k">&lt;-</span> <span class="pl-smi">pml</span>[<span class="pl-k">-</span><span class="pl-smi">inTrain</span>,]</pre></div>
@@ -80,19 +80,36 @@ Read more: <a href="http://groupware.les.inf.puc-rio.br/har#ixzz3jcYf6pTX">http:
                  <span class="pl-v">tuneLength</span> <span class="pl-k">=</span> <span class="pl-c1">10</span>,
                  <span class="pl-v">trControl</span> <span class="pl-k">=</span> trainControl(<span class="pl-v">method</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>cv<span class="pl-pds">"</span></span>))
 
-summary(<span class="pl-smi">knnFit</span>)</pre></div>
+<span class="pl-smi">knnFit</span></pre></div>
 
-<pre><code>##             Length Class      Mode     
-## learn        2     -none-     list     
-## k            1     -none-     numeric  
-## theDots      0     -none-     list     
-## xNames      52     -none-     character
-## problemType  1     -none-     character
-## tuneValue    1     data.frame list     
-## obsLevels    5     -none-     character
+<pre><code>## k-Nearest Neighbors 
+## 
+## 14718 samples
+##    52 predictor
+##     5 classes: 'A', 'B', 'C', 'D', 'E' 
+## 
+## Pre-processing: centered, scaled 
+## Resampling: Cross-Validated (10 fold) 
+## Summary of sample sizes: 13246, 13246, 13247, 13245, 13245, 13248, ... 
+## Resampling results across tuning parameters:
+## 
+##   k   Accuracy   Kappa      Accuracy SD  Kappa SD   
+##    5  0.9629719  0.9531520  0.003884553  0.004923691
+##    7  0.9506748  0.9375803  0.005222228  0.006619933
+##    9  0.9402109  0.9243324  0.007110269  0.009007607
+##   11  0.9311740  0.9128889  0.007601139  0.009646022
+##   13  0.9207772  0.8997230  0.007201140  0.009152958
+##   15  0.9126921  0.8894854  0.008346299  0.010601282
+##   17  0.9025027  0.8765767  0.008645326  0.010977378
+##   19  0.8948922  0.8669469  0.008548272  0.010849077
+##   21  0.8878939  0.8580893  0.007397837  0.009397475
+##   23  0.8800806  0.8481948  0.007578669  0.009620575
+## 
+## Accuracy was used to select the optimal model using  the largest value.
+## The final value used for the model was k = 5.
 </code></pre>
 
-<p>For k = 5, the accuracy was 96.7%.</p>
+<p>For k = 5, the accuracy was 96.3%.</p>
 
 <h3>
 <a id="cross-validation-plot" class="anchor" href="#cross-validation-plot" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross-Validation Plot</h3>
@@ -113,36 +130,36 @@ summary(<span class="pl-smi">knnFit</span>)</pre></div>
 ## 
 ##           Reference
 ## Prediction    A    B    C    D    E
-##          A 1379   13    1    2    0
-##          B    6  917   12    0    9
-##          C    2   13  828   33    4
-##          D    4    3   11  763    3
-##          E    4    3    3    6  885
+##          A 1378   33    2    2    1
+##          B    7  885    4    0    7
+##          C    2   27  833   26    6
+##          D    4    0   14  774    6
+##          E    4    4    2    2  881
 ## 
 ## Overall Statistics
 ##                                           
-##                Accuracy : 0.9731          
-##                  95% CI : (0.9682, 0.9774)
+##                Accuracy : 0.9688          
+##                  95% CI : (0.9635, 0.9735)
 ##     No Information Rate : 0.2845          
 ##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
 ##                                           
-##                   Kappa : 0.966           
-##  Mcnemar's Test P-Value : 0.004074        
+##                   Kappa : 0.9605          
+##  Mcnemar's Test P-Value : NA              
 ## 
 ## Statistics by Class:
 ## 
 ##                      Class: A Class: B Class: C Class: D Class: E
-## Sensitivity            0.9885   0.9663   0.9684   0.9490   0.9822
-## Specificity            0.9954   0.9932   0.9872   0.9949   0.9960
-## Pos Pred Value         0.9885   0.9714   0.9409   0.9732   0.9822
-## Neg Pred Value         0.9954   0.9919   0.9933   0.9900   0.9960
+## Sensitivity            0.9878   0.9326   0.9743   0.9627   0.9778
+## Specificity            0.9892   0.9954   0.9849   0.9941   0.9970
+## Pos Pred Value         0.9732   0.9801   0.9318   0.9699   0.9866
+## Neg Pred Value         0.9951   0.9840   0.9945   0.9927   0.9950
 ## Prevalence             0.2845   0.1935   0.1743   0.1639   0.1837
-## Detection Rate         0.2812   0.1870   0.1688   0.1556   0.1805
-## Detection Prevalence   0.2845   0.1925   0.1794   0.1599   0.1837
-## Balanced Accuracy      0.9920   0.9797   0.9778   0.9719   0.9891
+## Detection Rate         0.2810   0.1805   0.1699   0.1578   0.1796
+## Detection Prevalence   0.2887   0.1841   0.1823   0.1627   0.1821
+## Balanced Accuracy      0.9885   0.9640   0.9796   0.9784   0.9874
 </code></pre>
 
-<p>The Confusion Matrix shows an accuracy of 97.3% on the <code>testing</code> dataset. And the error rate is 2.7%.</p>
+<p>The Confusion Matrix shows an accuracy of 96.9% on the <code>testing</code> dataset. And the error rate is 3.1%.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/floyd1/Coursera_ML_Course_Project">Human Activity Recognition ML Project</a> is maintained by <a href="https://github.com/floyd1">floyd1</a>.</span>
